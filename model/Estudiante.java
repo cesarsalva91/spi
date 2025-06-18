@@ -1,23 +1,27 @@
 package model;
 
+import db.ConexionDB;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Estudiante {
-    private int id=0;
+    private int id;
     private String nombre;
     private String apellido;
-    private String matricula;
-    private String contacto; // Email del tutor
-    private List<String> materias; // Nombres o IDs de materias
+    private int matricula;
+    private String contacto;
 
-    public Estudiante(int id, String nombre, String apellido, String matricula, String contacto,
-            List<String> materias) {
-        this.id = id;
+    public Estudiante(String nombre, String apellido, int matricula, String contacto) {
         this.nombre = nombre;
         this.apellido = apellido;
         this.matricula = matricula;
         this.contacto = contacto;
-        this.materias = materias;
+    }
+
+    public Estudiante(int id, String nombre, String apellido, int matricula, String contacto) {
+        this(nombre, apellido, matricula, contacto);
+        this.id = id;
     }
 
     public int getId() {
@@ -32,7 +36,7 @@ public class Estudiante {
         return apellido;
     }
 
-    public String getMatricula() {
+    public int getMatricula() {
         return matricula;
     }
 
@@ -40,27 +44,79 @@ public class Estudiante {
         return contacto;
     }
 
-    public List<String> getMaterias() {
-        return materias;
+    public boolean guardarEnBD() {
+        String sql = "INSERT INTO estudiante (nombre, apellido, matricula, contacto) VALUES (?, ?, ?, ?)";
+        try (Connection conn = ConexionDB.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, nombre);
+            stmt.setString(2, apellido);
+            stmt.setInt(3, matricula);
+            stmt.setString(4, contacto);
+            stmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.out.println("Error al guardar estudiante: " + e.getMessage());
+            return false;
+        }
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
+    public boolean eliminarDeBD() {
+        String sql = "DELETE FROM estudiante WHERE id_estudiante = ?";
+        try (Connection conn = ConexionDB.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.out.println("Error al eliminar estudiante: " + e.getMessage());
+            return false;
+        }
     }
 
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
+    public static List<Estudiante> obtenerTodos() {
+        List<Estudiante> lista = new ArrayList<>();
+        String sql = "SELECT * FROM estudiante";
+
+        try (Connection conn = ConexionDB.obtenerConexion();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            while (rs.next()) {
+                Estudiante e = new Estudiante(
+                    rs.getInt("id_estudiante"),
+                    rs.getString("nombre"),
+                    rs.getString("apellido"),
+                    rs.getInt("matricula"),
+                    rs.getString("contacto")
+                );
+                lista.add(e);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error al obtener estudiantes: " + e.getMessage());
+        }
+        return lista;
     }
 
-    public void setMatricula(String matricula) {
-        this.matricula = matricula;
-    }
+    public static Estudiante buscarPorMatricula(int matricula) {
+        String sql = "SELECT * FROM estudiante WHERE matricula = ?";
+        try (Connection conn = ConexionDB.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, matricula);
+            ResultSet rs = stmt.executeQuery();
 
-    public void setContacto(String contacto) {
-        this.contacto = contacto;
-    }
-
-    public void setMaterias(List<String> materias) {
-        this.materias = materias;
+            if (rs.next()) {
+                return new Estudiante(
+                    rs.getInt("id_estudiante"),
+                    rs.getString("nombre"),
+                    rs.getString("apellido"),
+                    rs.getInt("matricula"),
+                    rs.getString("contacto")
+                );
+            }
+        } catch (SQLException e) {
+            System.out.println("Error al buscar estudiante: " + e.getMessage());
+        }
+        return null;
     }
 }

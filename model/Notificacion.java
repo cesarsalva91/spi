@@ -1,77 +1,66 @@
 package model;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
+import db.ConexionDB;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Notificacion {
-
-    private int idEstudiante;
+    private int id;
     private String mensaje;
-    private LocalDate fecha;
+    private Timestamp fechaEnvio;
+    private int idEstudiante;
 
-    public Notificacion() {}
-
-    public Notificacion(int idEstudiante, String mensaje, LocalDate fecha) {
-        this.idEstudiante = idEstudiante;
+    public Notificacion(String mensaje, int idEstudiante) {
         this.mensaje = mensaje;
-        this.fecha = fecha;
-    }
-
-    public int getIdEstudiante() {
-        return idEstudiante;
-    }
-
-    public void setIdEstudiante(int idEstudiante) {
         this.idEstudiante = idEstudiante;
     }
 
-    public String getMensaje() {
-        return mensaje;
+    public Notificacion(int id, String mensaje, Timestamp fechaEnvio, int idEstudiante) {
+        this(mensaje, idEstudiante);
+        this.id = id;
+        this.fechaEnvio = fechaEnvio;
     }
 
-    public void setMensaje(String mensaje) {
-        this.mensaje = mensaje;
-    }
+    // Getters y setters omitidos por brevedad
 
-    public LocalDate getFecha() {
-        return fecha;
-    }
-
-    public void setFecha(LocalDate fecha) {
-        this.fecha = fecha;
-    }
-
-    public static Notificacion desdeJson(String jsonLinea) {
-        try {
-            jsonLinea = jsonLinea.replace("{", "").replace("}", "").replace("\"", "");
-            String[] partes = jsonLinea.split(",");
-
-            int idEst = 0;
-            String mensaje = null;
-            LocalDate fecha = null;
-
-            for (String parte : partes) {
-                String[] kv = parte.split(":");
-                if (kv.length != 2) continue;
-                String clave = kv[0].trim();
-                String valor = kv[1].trim();
-
-                switch (clave) {
-                    case "idEstudiante" -> idEst = Integer.parseInt(valor);
-                    case "mensaje" -> mensaje = valor;
-                    case "fecha" -> fecha = LocalDate.parse(valor);
-                }
-            }
-
-            return new Notificacion(idEst, mensaje, fecha);
-        } catch (NumberFormatException | DateTimeParseException | ArrayIndexOutOfBoundsException e) {
-            System.out.println("Error al parsear notificación: " + e.getMessage());
-            return null;
+    public boolean guardarEnBD() {
+        String sql = "INSERT INTO notificacion (mensaje, id_estudiante) VALUES (?, ?)";
+        try (Connection conn = ConexionDB.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, mensaje);
+            stmt.setInt(2, idEstudiante);
+            stmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.out.println("Error al guardar notificación: " + e.getMessage());
+            return false;
         }
     }
 
-    public String aJson() {
-        return String.format("{\"idEstudiante\":%d,\"mensaje\":\"%s\",\"fecha\":\"%s\"}",
-                idEstudiante, mensaje, fecha);
+    public static List<Notificacion> obtenerPorEstudiante(int idEstudiante) {
+        List<Notificacion> lista = new ArrayList<>();
+        String sql = "SELECT * FROM notificacion WHERE id_estudiante = ?";
+
+        try (Connection conn = ConexionDB.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idEstudiante);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Notificacion n = new Notificacion(
+                    rs.getInt("id_notificacion"),
+                    rs.getString("mensaje"),
+                    rs.getTimestamp("fecha_envio"),
+                    rs.getInt("id_estudiante")
+                );
+                lista.add(n);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error al obtener notificaciones: " + e.getMessage());
+        }
+
+        return lista;
     }
 }

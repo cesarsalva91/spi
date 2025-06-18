@@ -1,24 +1,71 @@
 package model;
 
-import java.time.LocalDate;
+import db.ConexionDB;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Asistencia {
-    private int idEstudiante=0;
-    private String idMateria=null;
-    private LocalDate fecha=null;
-    private String estado; // "Presente", "Ausente", "Justificada"
+    private int id;
+    private Date fecha;
+    private String estado; // Ej: "Presente", "Ausente"
+    private boolean justificada;
+    private int idEstudiante;
 
-    public Asistencia(int idEstudiante, String idMateria, LocalDate fecha, String estado) {
-        this.idEstudiante = idEstudiante;
-        this.idMateria = idMateria;
+    public Asistencia(Date fecha, String estado, boolean justificada, int idEstudiante) {
         this.fecha = fecha;
         this.estado = estado;
+        this.justificada = justificada;
+        this.idEstudiante = idEstudiante;
     }
 
-    public int getIdEstudiante() { return idEstudiante; }
-    public String getIdMateria() { return idMateria; }
-    public LocalDate getFecha() { return fecha; }
-    public String getEstado() { return estado; }
+    public Asistencia(int id, Date fecha, String estado, boolean justificada, int idEstudiante) {
+        this(fecha, estado, justificada, idEstudiante);
+        this.id = id;
+    }
 
-    public void setEstado(String estado) { this.estado = estado; }
+    // Getters y setters omitidos por brevedad
+
+    public boolean guardarEnBD() {
+        String sql = "INSERT INTO asistencia (fecha, estado, justificada, id_estudiante) VALUES (?, ?, ?, ?)";
+        try (Connection conn = ConexionDB.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setDate(1, fecha);
+            stmt.setString(2, estado);
+            stmt.setBoolean(3, justificada);
+            stmt.setInt(4, idEstudiante);
+            stmt.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.out.println("Error al guardar asistencia: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static List<Asistencia> obtenerPorEstudiante(int idEstudiante) {
+        List<Asistencia> lista = new ArrayList<>();
+        String sql = "SELECT * FROM asistencia WHERE id_estudiante = ?";
+
+        try (Connection conn = ConexionDB.obtenerConexion();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idEstudiante);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Asistencia a = new Asistencia(
+                    rs.getInt("id_asistencia"),
+                    rs.getDate("fecha"),
+                    rs.getString("estado"),
+                    rs.getBoolean("justificada"),
+                    rs.getInt("id_estudiante")
+                );
+                lista.add(a);
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error al obtener asistencias: " + e.getMessage());
+        }
+
+        return lista;
+    }
 }

@@ -1,152 +1,139 @@
 package view;
 
 import java.awt.*;
-import java.time.LocalDate;
+import java.awt.event.ActionEvent;
+import java.sql.Date;
 import java.util.List;
 import javax.swing.*;
-import model.*;
+import model.Estudiante;
 import service.SchoolService;
 
 public class MainGUI extends JFrame {
-    private final SchoolService schoolService;
-    private JTextArea outputArea;
+
+    private SchoolService service;
 
     public MainGUI() {
-        super("Classroom Manager");
-        this.schoolService = new SchoolService();
-        configurarGUI();
+        service = new SchoolService();
+        initUI();
     }
 
-    private void configurarGUI() {
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(700, 500);
-        setLayout(new BorderLayout());
+    private void initUI() {
+        setTitle("Gestión Escolar");
+        setSize(600, 400);
+        setLocationRelativeTo(null);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        JPanel panelBotones = new JPanel(new GridLayout(4, 2));
+        JPanel panel = new JPanel(new GridLayout(0, 1, 10, 10));
+
+        JButton btnMostrarEstudiantes = new JButton("Mostrar Estudiantes");
+        btnMostrarEstudiantes.addActionListener((ActionEvent e) -> mostrarEstudiantes());
 
         JButton btnAgregarEstudiante = new JButton("Agregar Estudiante");
+        btnAgregarEstudiante.addActionListener((ActionEvent e) -> agregarEstudiante());
+
+        JButton btnEliminarEstudiante = new JButton("Eliminar Estudiante");
+        btnEliminarEstudiante.addActionListener((ActionEvent e) -> eliminarEstudiante());
+
         JButton btnRegistrarAsistencia = new JButton("Registrar Asistencia");
-        JButton btnRegistrarCalificacion = new JButton("Registrar Calificacion");
-        JButton btnRegistrarNotificacion = new JButton("Registrar Notificación");
-        JButton btnVerEstudiantes = new JButton("Ver Estudiantes");
-        JButton btnVerAsistencias = new JButton("Ver Asistencias");
-        JButton btnVerCalificaciones = new JButton("Ver Calificaciones");
-        JButton btnVerNotificaciones = new JButton("Ver Notificaciones");
+        btnRegistrarAsistencia.addActionListener((ActionEvent e) -> registrarAsistencia());
 
-        panelBotones.add(btnAgregarEstudiante);
-        panelBotones.add(btnRegistrarAsistencia);
-        panelBotones.add(btnRegistrarCalificacion);
-        panelBotones.add(btnRegistrarNotificacion);
-        panelBotones.add(btnVerEstudiantes);
-        panelBotones.add(btnVerAsistencias);
-        panelBotones.add(btnVerCalificaciones);
-        panelBotones.add(btnVerNotificaciones);
+        panel.add(btnMostrarEstudiantes);
+        panel.add(btnAgregarEstudiante);
+        panel.add(btnEliminarEstudiante);
+        panel.add(btnRegistrarAsistencia);
 
-        add(panelBotones, BorderLayout.NORTH);
-
-        outputArea = new JTextArea();
-        outputArea.setEditable(false);
-        add(new JScrollPane(outputArea), BorderLayout.CENTER);
-
-        btnAgregarEstudiante.addActionListener(e -> agregarEstudiante());
-        btnRegistrarAsistencia.addActionListener(e -> registrarAsistencia());
-        btnRegistrarCalificacion.addActionListener(e -> registrarCalificacion());
-        btnRegistrarNotificacion.addActionListener(e -> registrarNotificacion());
-        btnVerEstudiantes.addActionListener(e -> mostrarEstudiantes());
-        btnVerAsistencias.addActionListener(e -> mostrarAsistencias());
-        btnVerCalificaciones.addActionListener(e -> mostrarCalificaciones());
-        btnVerNotificaciones.addActionListener(e -> mostrarNotificaciones());
-
-        setVisible(true);
-    }
-
-    private void agregarEstudiante() {
-        String nombre = JOptionPane.showInputDialog(this, "Nombre del estudiante:");
-        String apellido = JOptionPane.showInputDialog(this, "Apellido del estudiante:");
-        String matricula = JOptionPane.showInputDialog(this, "Matrícula:");
-        String contacto = JOptionPane.showInputDialog(this, "Email de contacto:");
-
-        Estudiante nuevo = new Estudiante(0, nombre, apellido, matricula, contacto, null);
-        boolean resultado = schoolService.agregarEstudiante(nuevo);
-
-        outputArea.setText(resultado ? "Estudiante agregado con éxito." : "Error al agregar estudiante.");
-    }
-
-    private void registrarAsistencia() {
-        int id = Integer.parseInt(JOptionPane.showInputDialog(this, "ID del estudiante:"));
-        String materia = JOptionPane.showInputDialog(this, "ID de la materia:");
-        String estado = JOptionPane.showInputDialog(this, "Estado (Presente/Ausente):");
-
-        Asistencia nueva = new Asistencia(id, materia, LocalDate.now(), estado);
-        boolean resultado = schoolService.registrarAsistencia(nueva);
-
-        outputArea.setText(resultado ? "Asistencia registrada." : "Error al registrar asistencia.");
-    }
-
-    private void registrarCalificacion() {
-        int id = Integer.parseInt(JOptionPane.showInputDialog(this, "ID del estudiante:"));
-        String materia = JOptionPane.showInputDialog(this, "ID de la materia:");
-        double nota = Double.parseDouble(JOptionPane.showInputDialog(this, "Nota (0-10):"));
-
-        Calificacion nueva = new Calificacion(id, materia, nota);
-        boolean resultado = schoolService.registrarCalificacion(nueva);
-
-        outputArea.setText(resultado ? "Calificación registrada." : "Error al registrar calificación.");
-    }
-
-    private void registrarNotificacion() {
-        int id = Integer.parseInt(JOptionPane.showInputDialog(this, "ID del estudiante:"));
-        String mensaje = JOptionPane.showInputDialog(this, "Mensaje:");
-
-        Notificacion n = new Notificacion(id, mensaje, LocalDate.now());
-        boolean resultado = schoolService.registrarNotificacion(n);
-
-        outputArea.setText(resultado ? "Notificación registrada." : "Error al registrar notificación.");
+        add(panel, BorderLayout.CENTER);
     }
 
     private void mostrarEstudiantes() {
-        List<Estudiante> lista = schoolService.obtenerEstudiantesOrdenadosPorNombre();
-        StringBuilder sb = new StringBuilder("Lista de estudiantes:\n");
-        for (Estudiante e : lista) {
-            sb.append(e.getId()).append(" - ")
-              .append(e.getNombre()).append(" ")
-              .append(e.getApellido()).append(" | Matricula: ")
-              .append(e.getMatricula()).append("\n");
+        List<Estudiante> estudiantes = service.obtenerEstudiantes();
+        StringBuilder sb = new StringBuilder("Estudiantes registrados:\n");
+        for (Estudiante e : estudiantes) {
+            sb.append("ID: ").append(e.getId()).append(" - ")
+              .append(e.getNombre()).append(" ").append(e.getApellido()).append("\n");
         }
-        outputArea.setText(sb.toString());
+        JOptionPane.showMessageDialog(this, sb.toString());
     }
 
-    private void mostrarAsistencias() {
-        int id = Integer.parseInt(JOptionPane.showInputDialog(this, "ID del estudiante:"));
-        List<Asistencia> lista = schoolService.obtenerAsistenciasPorEstudiante(id);
-        StringBuilder sb = new StringBuilder("Asistencias del estudiante:\n");
-        for (Asistencia a : lista) {
-            sb.append(a.getFecha()).append(" - ").append(a.getIdMateria()).append(" - ").append(a.getEstado()).append("\n");
+    private void agregarEstudiante() {
+        String nombre = JOptionPane.showInputDialog("Nombre:");
+        String apellido = JOptionPane.showInputDialog("Apellido:");
+        String matriculaStr = JOptionPane.showInputDialog("Matrícula:");
+        String contacto = JOptionPane.showInputDialog("Contacto:");
+
+        try {
+            int matricula = Integer.parseInt(matriculaStr);
+            Estudiante estudiante = new Estudiante(nombre, apellido, matricula, contacto);
+            if (service.registrarEstudiante(estudiante)) {
+                JOptionPane.showMessageDialog(this, "Estudiante registrado exitosamente.");
+            } else {
+                JOptionPane.showMessageDialog(this, "Error al registrar estudiante.");
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Matrícula inválida.");
         }
-        outputArea.setText(sb.toString());
     }
 
-    private void mostrarCalificaciones() {
-        int id = Integer.parseInt(JOptionPane.showInputDialog(this, "ID del estudiante:"));
-        List<Calificacion> lista = schoolService.obtenerCalificacionesPorEstudiante(id);
-        StringBuilder sb = new StringBuilder("Calificaciones del estudiante:\n");
-        for (Calificacion c : lista) {
-            sb.append(c.getIdMateria()).append(" - Nota: ").append(c.getNota()).append("\n");
+    private void eliminarEstudiante() {
+        String idStr = JOptionPane.showInputDialog("ID del estudiante a eliminar:");
+        try {
+            int id = Integer.parseInt(idStr);
+            Estudiante est = service.obtenerEstudiantes().stream()
+                                    .filter(e -> e.getId() == id)
+                                    .findFirst().orElse(null);
+            if (est == null) {
+                JOptionPane.showMessageDialog(this, "El estudiante no existe.");
+                return;
+            }
+            int confirm = JOptionPane.showConfirmDialog(this,
+                    "¿Estás seguro de eliminar al estudiante " + est.getNombre() + " " + est.getApellido() + "?",
+                    "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
+            if (confirm == JOptionPane.YES_OPTION) {
+                boolean ok = est.eliminarDeBD();
+                JOptionPane.showMessageDialog(this, ok ? "Estudiante eliminado." : "Error al eliminar.");
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "ID inválido.");
         }
-        outputArea.setText(sb.toString());
     }
 
-    private void mostrarNotificaciones() {
-        int id = Integer.parseInt(JOptionPane.showInputDialog(this, "ID del estudiante:"));
-        List<Notificacion> lista = schoolService.obtenerNotificacionesPorEstudiante(id);
-        StringBuilder sb = new StringBuilder("Notificaciones:\n");
-        for (Notificacion n : lista) {
-            sb.append(n.getFecha()).append(" - ").append(n.getMensaje()).append("\n");
+    private void registrarAsistencia() {
+        JPanel panel = new JPanel(new GridLayout(0, 1));
+        JTextField idField = new JTextField();
+        JCheckBox chkPresente = new JCheckBox("Presente");
+        JCheckBox chkJustificada = new JCheckBox("Justificada");
+
+        panel.add(new JLabel("ID del estudiante:"));
+        panel.add(idField);
+        panel.add(chkPresente);
+        panel.add(chkJustificada);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Registrar Asistencia", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                int id = Integer.parseInt(idField.getText());
+                Estudiante est = service.obtenerEstudiantes().stream()
+                                        .filter(e -> e.getId() == id)
+                                        .findFirst().orElse(null);
+                if (est == null) {
+                    JOptionPane.showMessageDialog(this, "El estudiante no existe.");
+                    return;
+                }
+                String estado = chkPresente.isSelected() ? "Presente" : "Ausente";
+                boolean justificada = chkJustificada.isSelected();
+                Date fechaHoy = new Date(System.currentTimeMillis());
+                boolean ok = service.registrarAsistencia(id, fechaHoy, estado, justificada);
+                JOptionPane.showMessageDialog(this, ok ? "Asistencia registrada." : "Error al registrar.");
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "ID inválido.");
+            }
         }
-        outputArea.setText(sb.toString());
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(MainGUI::new);
+        EventQueue.invokeLater(() -> {
+            MainGUI ex = new MainGUI();
+            ex.setVisible(true);
+        });
     }
 }
