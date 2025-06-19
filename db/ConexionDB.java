@@ -9,7 +9,12 @@ public class ConexionDB {
     private static final String USUARIO = "root";
     private static final String CONTRASENA = "WUppa2-.";
 
-    public static Connection obtenerConexion() throws SQLException {
-        return DriverManager.getConnection(URL, USUARIO, CONTRASENA);
+    public static Connection conectar() {
+        try {
+            return DriverManager.getConnection(URL, USUARIO, CONTRASENA);
+        } catch (SQLException e) {
+            System.out.println("Error al conectar a la base de datos: " + e.getMessage());
+            return null;
+        }
     }
 }

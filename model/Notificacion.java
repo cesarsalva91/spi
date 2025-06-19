@@ -11,6 +11,7 @@ public class Notificacion {
     private Timestamp fechaEnvio;
     private int idEstudiante;
 
+    // === Constructores ===
     public Notificacion(String mensaje, int idEstudiante) {
         this.mensaje = mensaje;
         this.idEstudiante = idEstudiante;
@@ -22,16 +23,50 @@ public class Notificacion {
         this.fechaEnvio = fechaEnvio;
     }
 
-    // Getters y setters omitidos por brevedad
+    // === Getters y Setters ===
+    public int getId() {
+        return id;
+    }
 
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getMensaje() {
+        return mensaje;
+    }
+
+    public void setMensaje(String mensaje) {
+        this.mensaje = mensaje;
+    }
+
+    public Timestamp getFechaEnvio() {
+        return fechaEnvio;
+    }
+
+    public void setFechaEnvio(Timestamp fechaEnvio) {
+        this.fechaEnvio = fechaEnvio;
+    }
+
+    public int getIdEstudiante() {
+        return idEstudiante;
+    }
+
+    public void setIdEstudiante(int idEstudiante) {
+        this.idEstudiante = idEstudiante;
+    }
+
+    // === Persistencia ===
     public boolean guardarEnBD() {
         String sql = "INSERT INTO notificacion (mensaje, id_estudiante) VALUES (?, ?)";
-        try (Connection conn = ConexionDB.obtenerConexion();
+        try (Connection conn = ConexionDB.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, mensaje);
             stmt.setInt(2, idEstudiante);
             stmt.executeUpdate();
             return true;
+
         } catch (SQLException e) {
             System.out.println("Error al guardar notificación: " + e.getMessage());
             return false;
@@ -42,8 +77,9 @@ public class Notificacion {
         List<Notificacion> lista = new ArrayList<>();
         String sql = "SELECT * FROM notificacion WHERE id_estudiante = ?";
 
-        try (Connection conn = ConexionDB.obtenerConexion();
+        try (Connection conn = ConexionDB.conectar();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setInt(1, idEstudiante);
             ResultSet rs = stmt.executeQuery();
 

@@ -21,7 +21,12 @@ public class SchoolService {
     }
 
     public boolean registrarEstudiante(Estudiante estudiante) {
+        System.out.println("Registrando estudiante: " + estudiante.getIdentificacion());
         return estudiante.guardarEnBD();
+    }
+
+    public boolean eliminarEstudiante(int idEstudiante) {
+        return Estudiante.eliminarPorId(idEstudiante);
     }
 
     // === MATERIAS ===

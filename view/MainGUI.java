@@ -61,6 +61,12 @@ public class MainGUI extends JFrame {
         String matriculaStr = JOptionPane.showInputDialog("Matrícula:");
         String contacto = JOptionPane.showInputDialog("Contacto:");
 
+        if (nombre == null || apellido == null || matriculaStr == null || contacto == null ||
+            nombre.isBlank() || apellido.isBlank() || matriculaStr.isBlank() || contacto.isBlank()) {
+            JOptionPane.showMessageDialog(this, "Todos los campos son obligatorios.");
+            return;
+        }
+
         try {
             int matricula = Integer.parseInt(matriculaStr);
             Estudiante estudiante = new Estudiante(nombre, apellido, matricula, contacto);
@@ -89,7 +95,7 @@ public class MainGUI extends JFrame {
                     "¿Estás seguro de eliminar al estudiante " + est.getNombre() + " " + est.getApellido() + "?",
                     "Confirmar eliminación", JOptionPane.YES_NO_OPTION);
             if (confirm == JOptionPane.YES_OPTION) {
-                boolean ok = est.eliminarDeBD();
+                boolean ok = service.eliminarEstudiante(id);
                 JOptionPane.showMessageDialog(this, ok ? "Estudiante eliminado." : "Error al eliminar.");
             }
         } catch (NumberFormatException e) {
