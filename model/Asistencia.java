@@ -12,7 +12,7 @@ public class Asistencia {
     private boolean justificada;
     private int idEstudiante;
 
-    // Arreglo clásico para los posibles estados (cumple con el requisito del TP)
+    // Arreglo clásico para los posibles estados
     public static final String[] ESTADOS_VALIDOS = { "Presente", "Ausente" };
 
     public Asistencia(Date fecha, String estado, boolean justificada, int idEstudiante) {

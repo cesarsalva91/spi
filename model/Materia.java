@@ -10,7 +10,7 @@ public class Materia {
     private String nombre;
     private String descripcion;
 
-    // Arreglo clásico con nombres de materias predefinidas (opcional pero útil para el TP)
+    // Arreglo
     public static final String[] MATERIAS_PREDEFINIDAS = {
         "Matemática", "Lengua", "Historia", "Biología", "Informática", "Física"
     };

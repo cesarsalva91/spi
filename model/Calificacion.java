@@ -11,7 +11,7 @@ public class Calificacion {
     private int idEstudiante;
     private int idMateria;
 
-    // Arreglo clásico para cumplir con el TP (escalas comunes)
+    // Arreglo
     public static final float[] ESCALAS_POSIBLES = { 1.0f, 2.0f, 4.0f, 6.0f, 8.0f, 10.0f };
 
     public Calificacion(float nota, int idEstudiante, int idMateria) {
